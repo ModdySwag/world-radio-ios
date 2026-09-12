@@ -1,0 +1,57 @@
+name: MODDYSWorldRadio
+
+# The Xcode project is generated from this file by XcodeGen, so the project itself is a
+# readable document rather than a 2000-line .pbxproj nobody can review. CI generates it,
+# builds it, and commits the result back, so the repo is still openable in Xcode as-is.
+
+options:
+  bundleIdPrefix: com.moddys
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+  generateEmptyDirectories: false
+
+settings:
+  base:
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    # iPhone and iPad, one binary. The web app is responsive and the shell's sheet is
+    # height-relative, so this is a config flag rather than a second UI.
+    TARGETED_DEVICE_FAMILY: "1,2"
+    IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+    # Swift 6 language mode is opt-in; this shell is plain Swift 5 and does not need the
+    # concurrency checking that would come with it.
+    SWIFT_STRICT_CONCURRENCY: minimal
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    CLANG_ENABLE_MODULES: YES
+    GCC_WARN_ABOUT_RETURN_TYPE: YES
+    CLANG_WARN_DOCUMENTATION_COMMENTS: NO
+
+targets:
+  MODDYSWorldRadio:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: Sources
+      - path: Resources/Assets.xcassets
+      # The bundled web app is a folder reference: the real index.html, stations.js and
+      # countries.js - byte-identical to what moddys.net serves - plus the shared shell
+      # shim and the compatibility spec.
+      - path: Resources/www
+        type: folder
+    settings:
+      base:
+        INFOPLIST_FILE: Resources/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.moddys.worldradio
+        PRODUCT_NAME: MODDYSWorldRadio
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        # Signing is left at Xcode's defaults so the project behaves normally on a Mac.
+        # CI passes CODE_SIGNING_ALLOWED=NO for the unsigned builds it can do without an
+        # Apple Developer account.
+    scheme:
+      testTargets: []

@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "app": "MODDYS World Radio",
+  "platform": "ios",
+  "appVersion": "1.0.0",
+  "download": "https://moddys.net/#download",
+
+  "os": {
+    "name": "iOS",
+    "hard": { "os": "15.0", "label": "iOS 15" },
+    "soft": { "os": "18.0", "label": "iOS 18" },
+    "hardBlocksInstall": true
+  },
+
+  "engine": {
+    "name": "WebKit",
+    "label": "WebKit",
+    "softMajor": 0,
+    "note": "playback happens in Apple's WebKit engine, which ships with iOS - it, not the app, decides which streams decode and whether playback can start without a tap"
+  },
+
+  "notice": {
+    "title": "Heads up: this iOS version is older than the app is tuned for",
+    "body": "MODDYS World Radio installs on {hard} or newer, and is tuned for {soft} or newer.\n\nThis device reports {system}. The app will run, and this notice is the whole warning - expect rough edges.\n\nPlayback happens in {engine}, which is part of iOS itself, so on a release this old it cannot be updated without updating the system. That engine decides which streams can decode and whether playback can start without a tap.\n\nTap \"What can this device play?\" to see that answer for this exact device: the Check panel lists the engine version, the formats it can decode, and how many of the 47,994 stations it can actually play.",
+    "positiveAction": "Continue anyway",
+    "neutralAction": "What can this device play?"
+  },
+
+  "unsupported": {
+    "title": "MODDYS World Radio does not support this iOS version",
+    "body": "The app needs {hard} or newer; this device reports {system}.\n\nWhy: {hard} is the oldest iOS that Apple's current build tools will target, and the oldest whose WebKit this app is built and tested against.\n\nUse moddys.net in Safari on this device instead - the whole station list works in the browser. On a newer device, install the app."
+  }
+}

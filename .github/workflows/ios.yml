@@ -1,0 +1,271 @@
+name: Build iOS app
+
+# Builds the app on Apple's own toolchain without needing a Mac here: GitHub's macOS runners
+# have Xcode. What comes out is a verified .app and an UNSIGNED .ipa - installing that on a
+# real device needs a signature, which needs an Apple Developer account (see the README).
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      sync_from_site:
+        description: 'Pull the latest web app from https://moddys.net before building'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write        # to commit the regenerated Xcode project back
+
+jobs:
+  preflight:
+    name: Is there an Apple Developer account wired in?
+    runs-on: ubuntu-latest
+    outputs:
+      signed: ${{ steps.check.outputs.signed }}
+    steps:
+      - id: check
+        env:
+          KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+        run: |
+          if [ -n "$KEY_ID" ]; then
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+            echo "signing secrets found - a signed .ipa will be built too"
+          else
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            echo "no signing secrets - building and verifying unsigned (this is expected)"
+          fi
+
+  build:
+    name: Unsigned build + bundle verification
+    runs-on: macos-15
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Refresh the web app from the live site
+        if: ${{ inputs.sync_from_site == true }}
+        run: python3 tools/sync-assets.py --from-url
+
+      - name: Check the shared files are the ones the Android app ships
+        run: python3 tools/sync-shim.py --check
+
+      - name: Pick the newest Xcode on the runner
+        run: |
+          set -e
+          ls -d /Applications/Xcode*.app || true
+          NEWEST=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1 || true)
+          if [ -n "$NEWEST" ]; then sudo xcode-select -s "$NEWEST/Contents/Developer"; fi
+          xcode-select -p
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate the Xcode project
+        run: xcodegen generate
+
+      # This is the compile check: Swift syntax, the constraints, the asset catalog and the
+      # Info.plist all have to be right for this to pass, and nothing here can be verified on
+      # the Windows machine the app is written on.
+      - name: Build for the simulator
+        run: |
+          set -e
+          xcodebuild \
+            -project MODDYSWorldRadio.xcodeproj \
+            -scheme MODDYSWorldRadio \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Verify the built app
+        run: |
+          set -e
+          APP="build/Build/Products/Release-iphonesimulator/MODDYSWorldRadio.app"
+          ls -la "$APP"
+          ls -la "$APP/www" || true
+          python3 scripts/verify_bundle.py "$APP" --json build/verify-simulator.json
+
+      - name: Archive for a device (unsigned)
+        run: |
+          set -e
+          xcodebuild \
+            -project MODDYSWorldRadio.xcodeproj \
+            -scheme MODDYSWorldRadio \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/MODDYSWorldRadio.xcarchive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            archive
+
+      - name: Verify the archived app
+        run: |
+          set -e
+          APP="build/MODDYSWorldRadio.xcarchive/Products/Applications/MODDYSWorldRadio.app"
+          python3 scripts/verify_bundle.py "$APP" --json build/verify-device.json
+
+      - name: Package an unsigned .ipa
+        run: |
+          set -e
+          mkdir -p build/Payload
+          cp -R build/MODDYSWorldRadio.xcarchive/Products/Applications/MODDYSWorldRadio.app build/Payload/
+          (cd build && zip -qry MODDYSWorldRadio-unsigned.ipa Payload)
+          ls -la build/*.ipa
+
+      - name: Keep the project, so the repo needs no XcodeGen to be opened
+        uses: actions/upload-artifact@v4
+        with:
+          name: MODDYSWorldRadio-xcode-project
+          path: MODDYSWorldRadio.xcodeproj
+
+      - name: Keep the unsigned .ipa
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-radio-ios-unsigned-ipa
+          path: build/MODDYSWorldRadio-unsigned.ipa
+          if-no-files-found: error
+
+      - name: Keep the verification reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-radio-ios-verification
+          path: build/verify-*.json
+
+      - name: Commit the regenerated project if it changed
+        if: github.event_name == 'push'
+        run: |
+          set -e
+          if [ -z "$(git status --porcelain MODDYSWorldRadio.xcodeproj)" ]; then
+            echo "the generated project is unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add MODDYSWorldRadio.xcodeproj
+          git commit -m "Regenerate the Xcode project from project.yml"
+          git push
+
+  shim:
+    name: Shell shim (iOS bridge, real browser)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Playwright and Chromium
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+
+      # Drives the real page with the real shim on the iOS bridge path - the same file the app
+      # injects, so a regression here is a regression in the app.
+      - name: Drive the shim on the iOS bridge
+        run: python tools/shim_harness.py --only ios
+
+  signed:
+    name: Signed .ipa (needs an Apple Developer account)
+    needs: [ preflight, build ]
+    if: needs.preflight.outputs.signed == 'true'
+    runs-on: macos-15
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Pick the newest Xcode on the runner
+        run: |
+          set -e
+          NEWEST=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1 || true)
+          if [ -n "$NEWEST" ]; then sudo xcode-select -s "$NEWEST/Contents/Developer"; fi
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate the Xcode project
+        run: xcodegen generate
+
+      # An App Store Connect API key lets xcodebuild create and update the certificate and
+      # provisioning profile itself, so no keychain juggling and no .p12 in the repo.
+      # NOTE: this path has not been exercised yet - it activates the first time the secrets
+      # exist. Expected secrets: APPLE_API_KEY (base64 .p8), APPLE_API_KEY_ID,
+      # APPLE_API_ISSUER_ID, APPLE_TEAM_ID.
+      - name: Import the App Store Connect key
+        env:
+          KEY_B64: ${{ secrets.APPLE_API_KEY }}
+        run: |
+          set -e
+          KEY="$RUNNER_TEMP/AuthKey.p8"
+          printf '%s' "$KEY_B64" | base64 -d > "$KEY"
+          test -s "$KEY" || { echo "APPLE_API_KEY decoded empty"; exit 1; }
+          echo "APPLE_KEY_PATH=$KEY" >> "$GITHUB_ENV"
+
+      - name: Archive and export a signed .ipa
+        env:
+          KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          ISSUER: ${{ secrets.APPLE_API_ISSUER_ID }}
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -e
+          # Written with printf, not a here-doc: leading whitespace before the XML
+          # declaration makes the file unreadable to strict parsers.
+          printf '%s\n' \
+            '<?xml version="1.0" encoding="UTF-8"?>' \
+            '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' \
+            '<plist version="1.0">' \
+            '<dict>' \
+            '  <key>method</key><string>app-store-connect</string>' \
+            '  <key>uploadSymbols</key><true/>' \
+            '  <key>destination</key><string>export</string>' \
+            '</dict>' \
+            '</plist>' > build-export.plist
+
+          xcodebuild \
+            -project MODDYSWorldRadio.xcodeproj \
+            -scheme MODDYSWorldRadio \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/MODDYSWorldRadio.xcarchive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$APPLE_KEY_PATH" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER" \
+            DEVELOPMENT_TEAM="$TEAM" \
+            archive
+
+          xcodebuild -exportArchive \
+            -archivePath build/MODDYSWorldRadio.xcarchive \
+            -exportPath build/export \
+            -exportOptionsPlist build-export.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$APPLE_KEY_PATH" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER"
+
+          ls -la build/export
+
+      - name: Verify the signed app before it goes anywhere
+        run: |
+          set -e
+          APP="build/MODDYSWorldRadio.xcarchive/Products/Applications/MODDYSWorldRadio.app"
+          python3 scripts/verify_bundle.py "$APP"
+          codesign -dvvv "$APP" 2>&1 | head -20
+          codesign --verify --deep --strict "$APP" && echo "signature verifies"
+
+      - name: Keep the signed .ipa
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-radio-ios-signed-ipa
+          path: build/export/*.ipa
+          if-no-files-found: error

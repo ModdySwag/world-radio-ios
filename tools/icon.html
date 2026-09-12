@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MODDYS World Radio icon</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #0d020a; }
+  svg { display: block; }
+</style>
+</head>
+<body>
+<!-- The iOS app icon: the same broadcast tower the Android app uses, drawn from the same
+     path data (the Android vector is viewBox 0 0 108 108), so the two apps read as one
+     product. A 1024 icon is full-bleed - iOS applies its own mask, and the store rejects
+     rounded corners or transparency. -->
+<svg width="1024" height="1024" viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="34%" r="80%">
+      <stop offset="0" stop-color="#240615"/>
+      <stop offset="0.62" stop-color="#150310"/>
+      <stop offset="1" stop-color="#0b0209"/>
+    </radialGradient>
+    <linearGradient id="mast" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE45C"/>
+      <stop offset="1" stop-color="#FFD400"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FF3EA5" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#FF3EA5" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="108" height="108" fill="url(#bg)"/>
+
+  <!-- the signal, exactly the Android app's two arcs -->
+  <path d="M28,38a30,30 0 0,0 52,0" fill="none" stroke="#1FE3FF" stroke-width="4.5"
+        stroke-linecap="round" opacity="0.92"/>
+  <path d="M40,50a18,18 0 0,0 28,0" fill="none" stroke="#1FE3FF" stroke-width="4.5"
+        stroke-linecap="round"/>
+
+  <!-- the mast -->
+  <rect x="51" y="52" width="6" height="28" fill="url(#mast)"/>
+
+  <!-- the beacon -->
+  <circle cx="54" cy="88" r="20" fill="url(#glow)"/>
+  <circle cx="54" cy="88" r="9" fill="#FF3EA5"/>
+
+  <!-- a little spray, for the site's own graffiti habit -->
+  <circle cx="22" cy="82" r="1.6" fill="#FFD400" opacity="0.75"/>
+  <circle cx="30" cy="92" r="1.1" fill="#1FE3FF" opacity="0.6"/>
+  <circle cx="84" cy="76" r="1.4" fill="#FF3EA5" opacity="0.7"/>
+  <circle cx="78" cy="90" r="1.0" fill="#1FE3FF" opacity="0.55"/>
+  <circle cx="16" cy="52" r="1.0" fill="#FF3EA5" opacity="0.5"/>
+  <circle cx="94" cy="46" r="1.2" fill="#FFD400" opacity="0.6"/>
+</svg>
+</body>
+</html>

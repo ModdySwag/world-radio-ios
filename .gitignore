@@ -1,0 +1,15 @@
+# Build products
+build/
+DerivedData/
+*.ipa
+*.xcarchive
+
+# Xcode per-user state. The generated .xcodeproj itself IS committed (CI regenerates and
+# commits it from project.yml), so it is deliberately not ignored here.
+xcuserdata/
+*.xcuserdatad
+*.xcscmblueprint
+*.xccheckout
+
+# macOS
+.DS_Store
