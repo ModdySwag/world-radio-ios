@@ -1,66 +1,46 @@
-# MODDYS World Radio for iOS v1.0.0
+# MODDYS World Radio for iOS v1.0.1
 
-**The radio, on the iPhone and the iPad.** Same web app, same station list, same player —
-wrapped in the iOS shell it never had: it keeps playing when you leave the app or lock the
-screen, and it puts the station on your lock screen with a play button.
+**The same app as 1.0.0 - carrying the cleaned-up page.** Nothing about playback, the station
+list or your favourites has changed.
 
-This is the iOS twin of the Android app, and the two are deliberately the same product: the
-bundled `index.html`, `stations.js` and `countries.js` are byte-identical to what moddys.net
-serves, and the entire front end — the player sheet, the theme, the visualiser, the
-compatibility notice, the Check panel — is **one file shared by both apps**.
+`MODDYSWorldRadio-v1.0.1-unsigned.ipa` is **unsigned** and installs on nothing by itself - iOS
+refuses an unsigned app. It is here so it can be signed on your side (Sideloadly with your own
+Apple ID, an on-device signer, or your own certificate). Details on the downloads page.
 
-## What's here
+## What changed
 
-- **Background playback** through a normal iOS audio session, so the stream survives the app
-  going away and the device locking.
-- **A real lock-screen card**: artwork, station name, country · language · codec · bitrate,
-  with play, pause and stop. No next/previous and no scrubbing, because live radio has neither
-  and offering them would be a lie.
-- **The player sheet**, exactly as on Android: drag it up for the full view, drag it down to
-  fold it back to a bar, with volume, transport, and one-tap jumps to Search, Light/Dark,
-  Favourites, Random, Playable, Reset, Top, Visual and Check.
-- **Five visualiser styles**, lifted out of the page (which hides them on anything narrower
-  than 900px) and into the expanded player.
-- **Light mode**, remembered between launches.
-- **The Check panel**, reporting this device: iOS version, hardware model, the WebKit version
-  that decides what can decode, codec support, and how many of the 47,994 stations this device
-  can actually play — with a copy button for a bug report.
-- **Version compatibility, said out loud.** Below iOS 15 the app cannot be installed at all
-  (Apple enforces that from `MinimumOSVersion`). Below iOS 18 — the version the app is tuned
-  for — you get one dismissible notice at first launch explaining what is likely to be rough
-  and why, and the Check panel keeps that verdict visible afterwards.
-- **Links leave the app properly**: a station's website or stream opens in Safari instead of
-  replacing the player.
+- **The header no longer collapses.** The control is gone from the page and the header is always
+  the full-size one, whatever an older version may have left in storage. The shell used to have
+  to hide that control and force the header open; that code went with it.
+- **The filter panel starts closed**, so the station list is the first thing you see and
+  "Filters" opens the rest - which matters more on an iPhone than anywhere else, because the
+  panel used to push the list down behind the player.
+- **The download button has a pointing finger above it** - an inline SVG in the site's own cyan,
+  violet and pink. Hidden from screen readers, takes no clicks, and stops bobbing for anyone with
+  reduced motion set.
+- **The mini-player window's scroll wheel now changes transparency instead of opacity** - it
+  fades the background layers and leaves the text, artwork and buttons fully opaque, so the
+  window stays readable however far you take it. Same gesture as before, stops at 75%.
 
 ## Verified
 
-- **The built app is checked after CI, not the build log.** Bundle identity, the install-time
-  version floor against `compat.json`, the background-audio declaration, the cleartext
-  declaration, both device families, and the compiled binary's own strings for the bridge and
-  the notice.
-- **The bundled web app is byte-identical** to the repo's copy of the site files, and the
-  shell shim's SHA-256 is compared against the revision the Android app ships — inside the
-  built bundle, not just in the working tree.
-- **38 checks** driving the real shell in a real browser, on all three bridge paths: Android's
-  synchronous interface, iOS's message handler, and no bridge at all.
+- **34 new checks** for those four changes, against the built page and again against the live
+  site, including the returning-visitor cases (a stored collapsed-header flag and a stored
+  open-filter state both come up correct on load).
+- **46 checks** driving the shared shell in a real browser on the iOS bridge.
+- **The built app is inspected from the inside** before it is published: bundle id
+  `com.moddys.worldradio`, version 1.0.1, `MinimumOSVersion 15.0`, both device families,
+  `UIBackgroundModes: audio`, and the bundled page hashed against the one moddys.net serves.
 
 ## Install
 
-Not a tap-to-install download, and it is worth being straight about why: iOS will not run an
-app that Apple has not signed. What CI produces is a verified, **unsigned** `.ipa`.
+iPhone and iPad, iOS 15 or newer to install - tuned for iOS 18 or newer. Easiest route needs no
+computer: open moddys.net in Safari, then Share > **Add to Home Screen**. For the real app shell,
+sign this `.ipa` yourself.
 
-- **On your own device:** sideload it with Sideloadly or AltStore using any Apple ID. A free
-  Apple ID works, and needs the app re-signed every 7 days.
-- **For everyone else:** that needs the Apple Developer Program ($99/year), and then TestFlight
-  or the App Store. The build is already wired for signing — add the App Store Connect secrets
-  and the signed job runs.
-- **Nothing at all, today:** moddys.net → Share → **Add to Home Screen**. Full-screen, own
-  icon, and iOS keeps the audio playing in the background.
-
-**Privacy & safety:** nothing is collected, nothing is sent anywhere except the streams you
-press play on. No analytics, no accounts, no third-party SDKs, no external dependencies —
-Apple's own WebView, audio and media frameworks, plus a loopback-only HTTP server that serves
-the bundled page to the app itself. Cleartext `http://` is permitted because 8,330 of the
-47,994 stations are still plain HTTP; certificate checks are never bypassed.
+**Privacy & safety:** the app talks to one thing only, the radio directory and the streams you
+play. No analytics, no accounts, no tracking, nothing collected, nothing sent anywhere.
+Cleartext `http://` streams are allowed because 8,330 of the 47,994 stations are still plain
+HTTP; certificate checks are never bypassed.
 
 Cheers Moddy !
