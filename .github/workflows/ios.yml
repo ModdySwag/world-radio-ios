@@ -145,6 +145,14 @@ jobs:
             echo "the generated project is unchanged"
             exit 0
           fi
+          # A tag build checks out a detached HEAD, so there is no branch to push to: the
+          # regenerated project is kept as the workflow artifact instead (the step above uploads
+          # it). Committing it back is only meaningful on a branch.
+          if [ "${GITHUB_REF_TYPE}" != "branch" ]; then
+            echo "on ${GITHUB_REF_TYPE} ${GITHUB_REF_NAME}: keeping the regenerated project as an"
+            echo "artifact rather than committing it back to a tag."
+            exit 0
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add MODDYSWorldRadio.xcodeproj
