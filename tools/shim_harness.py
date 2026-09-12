@@ -24,12 +24,21 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJECT = os.path.dirname(HERE)
-SHIM = os.path.join(PROJECT, "app", "src", "main", "assets", "www", "_shell_shim.js")
-# The bundled copy is byte-identical to what the site serves, so either will do - prefer the
-# live site folder when it is on this machine, else the copy inside the project (CI).
+SHIM_CANDIDATES = [
+    # the Android project
+    os.path.join(PROJECT, "app", "src", "main", "assets", "www", "_shell_shim.js"),
+    # the iOS project
+    os.path.join(PROJECT, "Resources", "www", "_shell_shim.js"),
+]
+SHIM = next((p for p in SHIM_CANDIDATES if os.path.isfile(p)), SHIM_CANDIDATES[0])
+
+# The bundled copies are byte-identical to what the site serves, so either will do - prefer the
+# live site folder when it is on this machine, else the copy inside whichever project this is
+# (the Android repo keeps it under app/src/main/assets, the iOS repo under Resources/www).
 PAGE_CANDIDATES = [
     r"C:\Users\Moddy\radio-browser\deploy\index.html",
     os.path.join(PROJECT, "app", "src", "main", "assets", "www", "index.html"),
+    os.path.join(PROJECT, "Resources", "www", "index.html"),
 ]
 DEFAULT_PAGE = next((p for p in PAGE_CANDIDATES if os.path.isfile(p)), PAGE_CANDIDATES[0])
 
@@ -130,6 +139,9 @@ def run_platform(page, name, global_name, setup, device, headed):
     sheet = page.evaluate("!!document.getElementById('wrSheet')")
     check("%s: player sheet built" % name, sheet is True)
 
+    check("%s: marks the page as running inside the app" % name,
+          page.evaluate("document.documentElement.classList.contains('wr-app')") is True)
+
     res = page.evaluate("window.__wr.check()")
     rows = res["rows"]
     check("%s: check panel renders rows" % name, len(rows) >= 8, len(rows))
@@ -202,6 +214,9 @@ def main():
     page_url = "file:///" + a.page.replace("\\", "/")
     if not os.path.isfile(a.page):
         print("page not found: " + a.page, file=sys.stderr)
+        print("tried:", file=sys.stderr)
+        for candidate in PAGE_CANDIDATES:
+            print("  " + candidate, file=sys.stderr)
         return 2
     print("page: " + page_url)
     print("shim: " + SHIM)

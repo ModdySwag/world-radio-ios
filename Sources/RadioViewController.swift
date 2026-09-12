@@ -358,6 +358,24 @@ extension RadioViewController: WKNavigationDelegate {
 
 // MARK: - the page's messages
 
+extension RadioViewController: WKUIDelegate {
+
+    /// The page is full of `target="_blank"` links (a station's stream and homepage). With no
+    /// second window they do nothing at all on Android and would open a new WKWebView here -
+    /// either way the player is gone or the link is dead. The shell intercepts those clicks in
+    /// JavaScript, so this is the safety net for anything that slips past: no second window,
+    /// straight to the phone's browser.
+    func webView(_ webView: WKWebView,
+                 createWebViewWith configuration: WKWebViewConfiguration,
+                 for navigationAction: WKNavigationAction,
+                 windowFeatures: WKWindowFeatures) -> WKWebView? {
+        if let url = navigationAction.request.url {
+            openExternal(url)
+        }
+        return nil
+    }
+}
+
 extension RadioViewController: WKScriptMessageHandler {
 
     func userContentController(_ userContentController: WKUserContentController,

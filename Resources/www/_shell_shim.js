@@ -1014,8 +1014,16 @@
     return !!on;
   }
 
+  /* Mark the page as being inside the app. The site's own "Download the App" block (if it has
+     one - see the snippet that ships with the site) hides itself off this class, because a
+     download button inside the app is nonsense. Nothing else depends on it. */
+  function markAsApp() {
+    try { doc.documentElement.classList.add("wr-app"); } catch (e) { }
+  }
+
   /* -------------------------------------------------------------- assemble ---- */
 
+  markAsApp();
   killPopOut();
   externalLinks();
   suppressDiskNotice();
