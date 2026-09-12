@@ -28,7 +28,7 @@ DEST = os.path.join(PROJECT, "Resources", "www")
 
 # popout.html is deliberately not shipped: it opens a second window for the single-owner
 # handover, and a phone has no second window.
-FILES = ["index.html", "stations.js", "countries.js"]
+FILES = ["index.html", "stations.js", "countries.js", "viz.js"]
 
 DEFAULT_SITES = [
     r"C:\Users\Moddy\radio-browser\deploy",
