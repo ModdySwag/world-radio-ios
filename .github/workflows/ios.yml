@@ -7,6 +7,7 @@ name: Build iOS app
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
   workflow_dispatch:
     inputs:
@@ -172,6 +173,50 @@ jobs:
       # injects, so a regression here is a regression in the app.
       - name: Drive the shim on the iOS bridge
         run: python tools/shim_harness.py --only ios
+
+  release:
+    name: Publish the .ipa
+    # Same shape as the Android release: a tag is what publishes, and it publishes THE
+    # artifact this run built and verified - downloaded straight from this run's artifacts,
+    # not rebuilt somewhere else.
+    needs: [ build ]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out (for RELEASE_NOTES.md)
+        uses: actions/checkout@v4
+
+      - name: Take the .ipa this run just verified
+        uses: actions/download-artifact@v4
+        with:
+          name: world-radio-ios-unsigned-ipa
+          path: dist
+
+      - name: Name the download for humans, and for the site's fallback link
+        run: |
+          set -e
+          ls -la dist
+          TAG="${{ github.ref_name }}"
+          mv dist/MODDYSWorldRadio-unsigned.ipa "dist/MODDYSWorldRadio-${TAG}-unsigned.ipa"
+          ls -la dist
+
+      - name: Publish the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          TAG="${{ github.ref_name }}"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" dist/*.ipa --clobber
+          else
+            gh release create "$TAG" dist/*.ipa \
+              --title "MODDYS World Radio for iOS $TAG" \
+              --notes-file RELEASE_NOTES.md
+          fi
+          echo "--- release state ---"
+          gh release view "$TAG"
 
   signed:
     name: Signed .ipa (needs an Apple Developer account)
