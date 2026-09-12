@@ -162,6 +162,33 @@ final class RadioViewController: UIViewController {
         web.evaluateJavaScript(js, completionHandler: nil)
     }
 
+    /// Ask the site whether a newer build exists, and hand the answer to the shell, which owns
+    /// the notice and the button. Silent when it cannot be reached: a failed check must never
+    /// interrupt listening.
+    private func checkForUpdate(manual: Bool) {
+        UpdateChecker.check(manual: manual) { [weak self] info in
+            guard let self else { return }
+            if let info, info.available {
+                self.evaluate("window.__wrUpdate && window.__wrUpdate.available(\(info.json))")
+            } else {
+                self.evaluate("window.__wrUpdate && window.__wrUpdate.none("
+                              + self.quoted(info?.version ?? "") + ")")
+            }
+        }
+    }
+
+    /// A JSON-safe quoted string, for the calls that push a value into the page.
+    private func quoted(_ value: String) -> String {
+        let data = (try? JSONSerialization.data(withJSONObject: [value])) ?? Data()
+        let text = String(data: data, encoding: .utf8) ?? "[\""]"
+        return String(text.dropFirst().dropLast())
+    }
+
+    /// Called when the page has finished loading the shim: the one moment it is worth asking.
+    private func checkForUpdateAfterLoad() {
+        checkForUpdate(manual: false)
+    }
+
     /// The device facts the shim reads as `window.__wrDevice`, in the same shape the Android
     /// bridge returns from `device()`, so the shared shim needs no platform branch.
     private func deviceScript() -> String? {
@@ -332,6 +359,8 @@ extension RadioViewController: WKNavigationDelegate {
             noticeShown = true
             showCompatNotice()
         }
+        /* The page and the shim are both up: the one moment an update check is worth making. */
+        checkForUpdateAfterLoad()
     }
 
     func webView(_ webView: WKWebView,
@@ -401,6 +430,31 @@ extension RadioViewController: WKScriptMessageHandler {
 
         case "url":
             if let url = URL(string: text(args, 0)) { openExternal(url) }
+
+        case "dismissKeyboard":
+            /* A search was committed. Blurring the field is usually enough in a browser, but
+               this is a WKWebView and the keyboard is the system's: endEditing is what
+               reliably puts it away. */
+            view.endEditing(true)
+
+        case "checkUpdate":
+            checkForUpdate(manual: true)
+
+        case "updateApp":
+            /* Nothing on iOS can install an update over a sideloaded app, so this opens the
+               download page and says why. */
+            let page = UpdateChecker.downloadPage(text(args, 0))
+            let alert = UIAlertController(
+                title: "Install the new version",
+                message: "iOS will not let an app update itself when it was installed outside the "
+                       + "App Store. This opens the download page — install it the same way you "
+                       + "did the first time, and your saved stations stay.",
+                preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Open the page", style: .default) { [weak self] _ in
+                self?.openExternal(page)
+            })
+            alert.addAction(UIAlertAction(title: "Later", style: .cancel))
+            present(alert, animated: true)
 
         default:
             NSLog("WorldRadio: unhandled bridge message '\(name)'")
