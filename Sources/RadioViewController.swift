@@ -172,16 +172,9 @@ final class RadioViewController: UIViewController {
                 self.evaluate("window.__wrUpdate && window.__wrUpdate.available(\(info.json))")
             } else {
                 self.evaluate("window.__wrUpdate && window.__wrUpdate.none("
-                              + self.quoted(info?.version ?? "") + ")")
+                              + RadioViewController.jsString(info?.version ?? "") + ")")
             }
         }
-    }
-
-    /// A JSON-safe quoted string, for the calls that push a value into the page.
-    private func quoted(_ value: String) -> String {
-        let data = (try? JSONSerialization.data(withJSONObject: [value])) ?? Data()
-        let text = String(data: data, encoding: .utf8) ?? "[\""]"
-        return String(text.dropFirst().dropLast())
     }
 
     /// Called when the page has finished loading the shim: the one moment it is worth asking.
