@@ -1,36 +1,46 @@
-# MODDYS World Radio for iOS v1.0.1
+# MODDYS World Radio for iOS v1.0.2
 
-**The same app as 1.0.0 - carrying the cleaned-up page.** Nothing about playback, the station
-list or your favourites has changed.
+**The player bar now fits your phone.** The same row of controls, laid out to survive a narrow
+screen instead of running off the right edge.
 
-`MODDYSWorldRadio-v1.0.1-unsigned.ipa` is **unsigned** and installs on nothing by itself - iOS
-refuses an unsigned app. It is here so it can be signed on your side (Sideloadly with your own
+`MODDYSWorldRadio-v1.0.2-unsigned.ipa` is **unsigned** and installs on nothing by itself - iOS
+refuses an unsigned app. It is here so you can sign it on your side (Sideloadly with your own
 Apple ID, an on-device signer, or your own certificate). Details on the downloads page.
+
+## What was wrong
+
+Three separate faults in one row, measured across 14 device shapes:
+
+- **Nothing could give way.** The volume slider's own minimum width (about 129px) was wider than
+  the box it sat in, so it painted across the Pop-out button; and because the buttons were
+  shrinkable, a tight row squeezed Pop-out until its label wrapped onto three lines and the text
+  was cut off.
+- **A phone rule was hiding an element that does not exist** (it named `#barStop`; the button is
+  `#bStop`), so Stop stayed on screen taking room the row did not have.
+- **The page reserved no space for the bar**, and the station grid's 320px minimum column was
+  wider than a 320px phone's content width - which pushed the document past the screen edge and
+  made the whole page scale down.
 
 ## What changed
 
-- **The header no longer collapses.** The control is gone from the page and the header is always
-  the full-size one, whatever an older version may have left in storage. The shell used to have
-  to hide that control and force the header open; that code went with it.
-- **The filter panel starts closed**, so the station list is the first thing you see and
-  "Filters" opens the rest - which matters more on an iPhone than anywhere else, because the
-  panel used to push the list down behind the player.
-- **The download button has a pointing finger above it** - an inline SVG in the site's own cyan,
-  violet and pink. Hidden from screen readers, takes no clicks, and stops bobbing for anyone with
-  reduced motion set.
-- **The mini-player window's scroll wheel now changes transparency instead of opacity** - it
-  fades the background layers and leaves the text, artwork and buttons fully opaque, so the
-  window stays readable however far you take it. Same gesture as before, stops at 75%.
+- Nothing in the bar can be squeezed any more, and the slider shrinks properly.
+- On phones the bar drops Stop, Website, the volume percentage, the badge, the meta line and the
+  visualiser toggle (its canvas is already switched off below 900px, so on a phone it was a
+  button that could do nothing visible).
+- The Pop-out button keeps its icon and its accessible name; only the word is dropped on the
+  narrowest screens.
+- The page now reserves the bar's measured height, so the last station cards are no longer
+  sitting underneath it, and the back-to-top button and toasts clear it.
+- Controls are at least 40px on touch, and the bar respects the side safe areas as well as the
+  bottom one.
 
 ## Verified
 
-- **34 new checks** for those four changes, against the built page and again against the live
-  site, including the returning-visitor cases (a stored collapsed-header flag and a stored
-  open-filter state both come up correct on load).
-- **46 checks** driving the shared shell in a real browser on the iOS bridge.
-- **The built app is inspected from the inside** before it is published: bundle id
-  `com.moddys.worldradio`, version 1.0.1, `MinimumOSVersion 15.0`, both device families,
-  `UIBackgroundModes: audio`, and the bundled page hashed against the one moddys.net serves.
+- **The bar, on 14 device profiles** including iPhone SE, iPhone 15, iPhone 15 Pro Max, iPad
+  mini, iPad Pro and a landscape phone: nothing clipped, nothing overlapping, and the page never
+  wider than the device. 6 profiles were broken before this.
+- **46 shell checks** still pass on the iOS bridge, and the page inside the .ipa is
+  byte-identical to the one moddys.net serves.
 
 ## Install
 
