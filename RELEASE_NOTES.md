@@ -1,62 +1,52 @@
-# MODDYS World Radio for iOS v1.1.0
+# MODDYS World Radio for iOS v1.1.1
 
-The station list stops being a closed book on iPhone and iPad: you can add your own stations now -
-a quiet ➕ Add button, a short form, and anything that streams audio joins the list.
+The page buttons, redone for iPhone and iPad: the arrows take you to the page, one tap is always one
+page, and the row is laid out properly on every screen size.
 
 ## What changed
 
-**Add a station.** ➕ Add - the last button in the toolbar, or just press `a` - opens a small form:
-name, stream URL, format, bitrate, country, city, language, genres and website. The country field
-suggests all 221 of them, the format is worked out from the address (with an override if you know
-better than the URL does), and there is a short how-to under the fields for the first time you use it.
-The Add and Cancel buttons stay pinned to the bottom of the form, so they are reachable without
-scrolling past nine fields on a phone.
+**The arrows take you to the page.** They always did turn it - but every turn jumped you to the very
+top of the page, which on a phone is the header and the search field, with the freshly loaded stations
+below the fold: it looks exactly like "the button did nothing". A turn now lands on the results, and
+turning from the bottom pager (240 cards down) comes back up to the first card of the new page.
 
-**It tells you when an address will not play, instead of adding it and leaving you with a dead card.**
-A `.pls`, `.m3u` or `.xspf` playlist is refused on the spot - that is a file for a desktop player, not
-a browser - and so is a DASH manifest, a web page, a missing name, and the same stream twice. Two
-things are added but flagged rather than refused: an HLS address on a browser that cannot play it, and
-a plain `http://` address on a secure page.
+**One tap, one page - never two, never none.** Two things could turn a page: WebKit's click, and a
+fallback for the cases where the click after a touch never arrives. Which of them had already acted was
+decided by a stopwatch, so a tap landing just inside the window was swallowed (nothing happened) and
+one just outside it was counted twice (two pages a tap). They now share a single flag per touch: the
+click claims its own touch, and the fallback takes it only if no click ever arrived.
 
-**Test stream, before you save.** It asks the station's own server what it is serving *and* lets WebKit
-try to decode it - muted, so nothing announces itself out of your phone - then says what it found. A
-stream server that answers HEAD requests with an error is handled too (it is asked with GET, and the
-body is dropped straight away). When it cannot confirm an address it says exactly that; it never calls
-something playable on a guess.
+**The row is laid out across all formats.** On an iPhone and an iPad the back arrow owns the left end,
+the forward arrow the right end, and the page numbers sit together in the middle - it used to spread
+four items with a 136px hole between the back arrow and the first number. Every control is a 44px
+target, the page you are on is the cyan number between the arrows, and tapping a number is a jump:
+page 1 and the last page are always one tap away.
 
-**Your stations are yours.** They live in this app's own storage, are searchable and filterable along
-with everything else, can be starred, played and removed (✕ on the card, or Remove in its details),
-and they are never uploaded anywhere. No account, same as the rest of the app.
+**No more listener pile-up.** Every keystroke in the search field re-bound the pager and added another
+touch listener without removing the old one. The pager is bound once now.
 
-**A station you just added is never lost in the list.** It goes to the top, the search box is put back
-to empty for it, and if a filter - or the Verified switch - would still hide it, the app says so and
-offers the one tap that shows it.
+**Screen readers hear the page change** ("Page 2 of 174"). Nothing new is printed on screen and the
+stations line above still carries only the count.
 
-**Nothing else moved.** The mini player, the docking and resizing, the hand-over, the toolbar's four
-bars, the count and the pager are exactly as they were.
-
-**The bundled page is the current one**, byte for byte - the same file Android 1.7.0 carries.
+**The bundled page is the current one**, byte for byte - the same file Android 1.7.1 carries.
 
 ## Verified
 
-- the suite that drives the real page, against this page: 239 checks, 0 failed
-- the same suite against what moddys.net serves: 239 checks, 0 failed
-- the add-a-station suite (new with this release): 60 checks, 0 failed in Chromium and 60 in WebKit -
-  WebKit is the engine this app actually uses - and 59 against the live site, where the one check that
-  needs a same-origin audio file is skipped and says so
-- the layout sweep over 14 device shapes (Android 320 / 360 / 412, landscape, 800 tablet; iPhone
-  SE / 15 / 15 Pro Max; iPad mini / Pro; macOS 1280 / 1440; Windows 1366 / 1920): 14 measured,
-  0 broken
-- `tools/shim_harness.py --only ios` drives the real shell over the iOS bridge: 32 checks, 0 failed
-- the downloads suite: 84 checks, 0 failed, and the live feed checks against the file and its sha256
-- the bundled `index.html` is byte-identical to the one this release puts on the site
-  (sha256 `8b842489ac5d8141ac3927718057e525`), and `scripts/verify_bundle.py` reads that out of the
-  published `.app` itself rather than off a build log
+- the suite that drives the real page, against this page: 251 checks, 0 failed - including the new
+  checks: one tap advances exactly one page, a turn from the bottom pager brings the reader to the
+  results, the two arrows own the two ends of the row, every pager control is a 44px target, and
+  tapping a page number jumps to it
+- the same suite against what moddys.net serves: 251 checks, 0 failed
+- `tools/shim_harness.py --only ios` over the iOS bridge: 35 checks, 0 failed - including the three
+  pager checks inside the app; the harness is now the same file Android runs (the two had drifted)
+- the pager measured directly in WebKit, the engine this app uses, at phone, tablet, desktop and
+  landscape sizes
+- the bundled `index.html` is byte-identical to the one this release puts on the site, and
+  `scripts/verify_bundle.py` reads that out of the published `.app` itself
 
 ## Install
 
 Sideload the unsigned `.ipa` with Sideloadly (or an on-device signer) and your own Apple ID - see the
-download page for the two steps. Your stations and favourites stay, including the ones you added by
-hand.
+download page for the two steps. Your stations and favourites stay.
 
 ## Cheers Moddy !
