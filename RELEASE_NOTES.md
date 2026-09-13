@@ -27,7 +27,11 @@ edge and is taller than the dock's inset, so the volume row and the footer were 
   SE / 15 / 15 Pro Max; iPad mini / Pro; macOS 1280 / 1440; Windows 1366 / 1920): 14 measured,
   0 broken, locally and against the live site
 - `tools/shim_harness.py` drives the real shell over both bridges: 76 checks, 0 failed
+- the downloads suite: 84 checks, 0 failed, and 28 more against the live feed, the file it points
+  at, and the sha256 of what the host really serves
 - the bundled `index.html` is byte-identical to the one this release puts on the site
+  (sha256 `3c170425cc7e26eb…`), and `scripts/verify_bundle.py` reads that out of the published
+  `.app` itself: 31 checks, 0 failed
 
 ## Install
 
