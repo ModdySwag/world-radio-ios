@@ -25,6 +25,9 @@ Apple ID, an on-device signer, or your own certificate). Details on the download
 - the layout sweep over 14 device shapes, iOS among them (iPhone SE / 15 / 15 Pro Max, iPad mini /
   Pro): 14 measured, 0 broken
 - the shell shim under WebKit, the engine this app runs: 76 checks, 0 failed
+- `scripts/verify_bundle.py` on the .app inside this .ipa: 31 checks, 0 failed - every bundled
+  file byte-identical to the repo copy, the shim matching the recorded shared-shell revision,
+  and the bundle id, minimum iOS version and background-audio declaration as they should be
 
 ## Install
 
