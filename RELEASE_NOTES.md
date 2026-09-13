@@ -35,8 +35,9 @@ reachable at the smallest.
 - `tools/shim_harness.py` drives the real shell over both bridges: 76 checks, 0 failed
 - the downloads suite: 84 checks, 0 failed, and 28 more against the live feed, the file it points
   at, and the sha256 of what the host really serves
-- the bundled `index.html` is byte-identical to the one this release puts on the site, and
-  `scripts/verify_bundle.py` reads that out of the published `.app` itself
+- the bundled `index.html` is byte-identical to the one this release puts on the site (sha256
+  `38b1b8b41ba29259…`), and `scripts/verify_bundle.py` reads that out of the published `.app`
+  itself: 31 checks, 0 failed
 
 ## Install
 
