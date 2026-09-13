@@ -1,47 +1,62 @@
-# MODDYS World Radio for iOS v1.0.9
+# MODDYS World Radio for iOS v1.1.0
 
-The new mini player, bundled for iOS: it takes the screen, and you can drag it and size it.
+The station list stops being a closed book on iPhone and iPad: you can add your own stations now -
+a quiet ➕ Add button, a short form, and anything that streams audio joins the list.
 
 ## What changed
 
-**The mini player takes the screen.** Pressing the cover picture on a phone or an iPad used to leave the
-station list behind the player. While the player is up the page now stands down - header, toolbar, list and
-the bottom bar all go - and the mini player is what you have. ✕, a tap on the backdrop or Escape brings the
-page straight back.
+**Add a station.** ➕ Add - the last button in the toolbar, or just press `a` - opens a small form:
+name, stream URL, format, bitrate, country, city, language, genres and website. The country field
+suggests all 221 of them, the format is worked out from the address (with an override if you know
+better than the URL does), and there is a short how-to under the fields for the first time you use it.
+The Add and Cancel buttons stay pinned to the bottom of the form, so they are reachable without
+scrolling past nine fields on a phone.
 
-**It moves, and it resizes.** Drag the title bar to move it, drag the grip in its corner for any size in
-between, and it remembers where you left it.
+**It tells you when an address will not play, instead of adding it and leaving you with a dead card.**
+A `.pls`, `.m3u` or `.xspf` playlist is refused on the spot - that is a file for a desktop player, not
+a browser - and so is a DASH manifest, a web page, a missing name, and the same stream twice. Two
+things are added but flagged rather than refused: an HLS address on a browser that cannot play it, and
+a plain `http://` address on a secure page.
 
-**S / M / L mean what they say.** S is a genuinely small player (320x250 at most, down from 430x330), M is
-half the screen, L is the whole screen.
+**Test stream, before you save.** It asks the station's own server what it is serving *and* lets WebKit
+try to decode it - muted, so nothing announces itself out of your phone - then says what it found. A
+stream server that answers HEAD requests with an error is handled too (it is asked with GET, and the
+body is dropped straight away). When it cannot confirm an address it says exactly that; it never calls
+something playable on a guess.
 
-**A touch screen always gets the docked player** - including an iPad reporting a desktop user agent - and it
-opens as the small player, never full screen. The page inside reflows at every size, so its controls stay
-reachable at the smallest.
+**Your stations are yours.** They live in this app's own storage, are searchable and filterable along
+with everything else, can be starred, played and removed (✕ on the card, or Remove in its details),
+and they are never uploaded anywhere. No account, same as the rest of the app.
 
-**The bundled page is the current one**, byte for byte - the same file Android 1.6.9 carries.
+**A station you just added is never lost in the list.** It goes to the top, the search box is put back
+to empty for it, and if a filter - or the Verified switch - would still hide it, the app says so and
+offers the one tap that shows it.
+
+**Nothing else moved.** The mini player, the docking and resizing, the hand-over, the toolbar's four
+bars, the count and the pager are exactly as they were.
+
+**The bundled page is the current one**, byte for byte - the same file Android 1.7.0 carries.
 
 ## Verified
 
-- the suite that drives the real page, against this page: 236 checks, 0 failed - including a twenty-check
-  section that runs the player as a tablet at 800x1280 and 1280x800: it docks, opens no tab, the site
-  stands down behind it, it opens as the small player and not full screen, M is half the screen, L is all
-  of it, the title bar drags it, the corner resizes it, and the docked page is a player rather than a
-  minimised page
-- the same suite against what moddys.net serves: 236 checks, 0 failed
+- the suite that drives the real page, against this page: 239 checks, 0 failed
+- the same suite against what moddys.net serves: 239 checks, 0 failed
+- the add-a-station suite (new with this release): 60 checks, 0 failed in Chromium and 60 in WebKit -
+  WebKit is the engine this app actually uses - and 59 against the live site, where the one check that
+  needs a same-origin audio file is skipped and says so
 - the layout sweep over 14 device shapes (Android 320 / 360 / 412, landscape, 800 tablet; iPhone
   SE / 15 / 15 Pro Max; iPad mini / Pro; macOS 1280 / 1440; Windows 1366 / 1920): 14 measured,
-  0 broken, locally and against the live site
-- `tools/shim_harness.py` drives the real shell over both bridges: 76 checks, 0 failed
-- the downloads suite: 84 checks, 0 failed, and 28 more against the live feed, the file it points
-  at, and the sha256 of what the host really serves
-- the bundled `index.html` is byte-identical to the one this release puts on the site (sha256
-  `38b1b8b41ba29259…`), and `scripts/verify_bundle.py` reads that out of the published `.app`
-  itself: 31 checks, 0 failed
+  0 broken
+- `tools/shim_harness.py --only ios` drives the real shell over the iOS bridge: 32 checks, 0 failed
+- the downloads suite: 84 checks, 0 failed, and the live feed checks against the file and its sha256
+- the bundled `index.html` is byte-identical to the one this release puts on the site
+  (sha256 `8b842489ac5d8141ac3927718057e525`), and `scripts/verify_bundle.py` reads that out of the
+  published `.app` itself rather than off a build log
 
 ## Install
 
-Sideload the unsigned `.ipa` with Sideloadly (or an on-device signer) and your own Apple ID - see
-the download page for the two steps. Your stations and favourites stay.
+Sideload the unsigned `.ipa` with Sideloadly (or an on-device signer) and your own Apple ID - see the
+download page for the two steps. Your stations and favourites stay, including the ones you added by
+hand.
 
 ## Cheers Moddy !
