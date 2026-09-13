@@ -1,41 +1,30 @@
-# MODDYS World Radio for iOS v1.0.6
+# MODDYS World Radio for iOS v1.0.7
 
-The same page work as the Android release, bundled for iOS.
+The same page housekeeping as the Android release, bundled for iOS.
 
 ## What changed
 
-**Four tidy rows, all the same width.** The header, then the search field, then the stations line
-(the count and the Verified switch), then Format · Bitrate · Country, then Saved and Reset. Every
-row is cut to the shape of the search field, which is what makes it read as one thing instead of a
-pile of buttons.
+**Two lines of dead code, gone** from `index.html` - a channel-message counter and a
+recent-stations helper that nothing called - and the counter also leaves `popout.html`. Nothing a
+listener can see or press changes: the toolbar, the search, the filters, Saved, 🎲 Random and
+the hand-over are exactly as they were in 1.0.6.
 
-**The genre panel is gone.** It was too complicated and it cluttered the screen in landscape, and
-the search field already did the job: type `dub`, `news` or `spanish` and the list narrows to that.
-The station line is now just the count — no page number, no "1–240", no "10,965 hidden" — and the
-Verified switch at its right-hand end decides whether that number is the stations this browser can
-play or all of them.
-
-**🎲 Random** plays a station out of the list you are looking at. Your search, your filters and the
-Verified switch all still apply, and it prefers one this browser can actually play.
-
-**On a phone the page arrows take a line of their own**, filling it, so a hundred-odd pages of
-results are easier to move through.
+**The bundled page is the current one**, byte for byte.
 
 Inside the app the player is the app's own bottom sheet (a phone has no second window), so the
-site's pop-out is not part of this build — the page's playing, pausing and skipping all go through
-the sheet as before.
+site's pop-out is not part of this build, as before.
 
-`MODDYSWorldRadio-v1.0.6-unsigned.ipa` is **unsigned** and installs on nothing by itself - iOS
+`MODDYSWorldRadio-v1.0.7-unsigned.ipa` is **unsigned** and installs on nothing by itself - iOS
 refuses an unsigned app. It is here so you can sign it on your side (Sideloadly with your own
 Apple ID, an on-device signer, or your own certificate). Details on the downloads page.
 
 ## Verified
 
-- `scripts/verify_bundle.py` on the .app inside this .ipa: 31 checks, 0 failed — the bundled
-  `index.html`, `stations.js`, `countries.js`, `viz.js`, the shell shim and `compat.json` are all
-  byte-identical to the repo copies, the shim is the recorded shared-shell revision, and the bundle
-  id, minimum iOS version and background-audio declaration are as they should be
-- the same 213-check page suite that the Android release runs, against the files this bundle carries
+- the same 213-check page suite the Android release runs, against the files this bundle carries:
+  213 checks, 0 failed
+- the layout sweep over 14 device shapes, iOS among them (iPhone SE / 15 / 15 Pro Max, iPad mini /
+  Pro): 14 measured, 0 broken
+- the shell shim under WebKit, the engine this app runs: 76 checks, 0 failed
 
 ## Install
 
